@@ -5,7 +5,6 @@ import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorLightSensor;
 import lejos.nxt.LCD;
 import lejos.nxt.SensorPort;
-import lejos.robotics.Colors.Color;
 import lejos.robotics.subsumption.Arbitrator;
 import lejos.robotics.subsumption.Behavior;
 

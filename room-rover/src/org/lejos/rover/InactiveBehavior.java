@@ -23,7 +23,7 @@ public class InactiveBehavior implements Behavior, Runnable {
 			suppressRequest=true;
 			while(thread.isAlive()) {
 				try {
-					thread.sleep(10);
+					Thread.sleep(10);
 				} catch (InterruptedException e) {
 				}
 			}

@@ -9,15 +9,15 @@ import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTInfo;
 
 public class Transmitter implements Runnable {
-	
-	private static byte KEEP_ALIVE=1;
-	
+		
 	private Thread thread;
 	private NXTComm communicator;
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
+	private MessageCoder messageCoder;
 	private NXTInfo nxt;
 	private boolean disconnectRequest;
+	private long lastReceiveTime;
 
 	public void setStopRequest(boolean stopRequest) {
 		this.disconnectRequest = stopRequest;
@@ -40,6 +40,7 @@ public class Transmitter implements Runnable {
 
 		inputStream=new DataInputStream(communicator.getInputStream());
 		outputStream=new DataOutputStream(communicator.getOutputStream());
+		messageCoder=new MessageCoder(inputStream,outputStream);
 		
 		thread=new Thread(this);
 		thread.start();
@@ -62,25 +63,15 @@ public class Transmitter implements Runnable {
 	@Override
 	public void run() {		
 		
-		long lastReceiveTime=System.currentTimeMillis();
+		lastReceiveTime = System.currentTimeMillis();
 		
 		while(!disconnectRequest) {
 			
 			try {
-				byte messageType=inputStream.readByte();
 				
-				// Checking for timeout
-				long receiveTime=System.currentTimeMillis();
-				
-				if(receiveTime-lastReceiveTime>5000) {
-					System.out.println("Receive timeout => disconnecting.");
-					break;
-				}
-				
-				lastReceiveTime=receiveTime;
+				messageCoder.decodeMessage();
 
-				//TODO Read message from stream.
-			
+				lastReceiveTime=System.currentTimeMillis();			
 				
 			} catch (IOException ex) {
 				ex.printStackTrace();
@@ -93,11 +84,15 @@ public class Transmitter implements Runnable {
 
 	public void sendKeepAlive() {
 		try {
-			outputStream.writeByte(KEEP_ALIVE);
+			messageCoder.encodeKeepalive();
 		} catch (IOException e) {
 			e.printStackTrace();
 			disconnectRequest=true;
 		}
+	}
+
+	public long getLastReceiveTime() {
+		return lastReceiveTime;
 	}
 	
 }
