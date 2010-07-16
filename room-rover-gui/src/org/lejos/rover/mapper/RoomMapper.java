@@ -107,7 +107,7 @@ public class RoomMapper {
 			float observedProbability=cone.getProbability(currentVector);
 			float mapProbability=getProbabilityValue(currentIndex)/255f;
 			
-			// The higher the certaintity the higher weight the observation has.
+			// The higher the probability the higher weight the observation has.
 			float dynamicWeight=(float)(0.5*2*Math.abs(0.5f-observedProbability));
 			float newMapProbability=((1-dynamicWeight)*mapProbability+dynamicWeight*observedProbability);
 			

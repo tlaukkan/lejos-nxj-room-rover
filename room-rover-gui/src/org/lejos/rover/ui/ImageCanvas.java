@@ -11,7 +11,6 @@ public class ImageCanvas extends Canvas {
 	
 	public ImageCanvas(Image image) {
 		super();
-		
 		this.image=image;
 	}
 
