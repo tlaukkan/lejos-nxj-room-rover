@@ -40,12 +40,13 @@ public class InactiveBehavior implements Behavior, Runnable {
 		boolean lightOn=false;
 		
 		while(!suppressRequest) {
-			
+			/*
 			if(lightOn) {
 				RoomRover.getInstance().getLightSensor().setFloodlight(Color.BLUE);
 			} else {
 				RoomRover.getInstance().getLightSensor().setFloodlight(false);				
 			}
+			*/
 			lightOn=!lightOn;
 			
 			try {

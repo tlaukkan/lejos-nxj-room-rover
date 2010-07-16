@@ -3,140 +3,60 @@ package org.lejos.rover;
 import lejos.robotics.Colors.Color;
 import lejos.robotics.subsumption.Behavior;
 
-public class RemoteBehavior implements Behavior,Runnable {
+public class RemoteBehavior implements Behavior, Runnable {
 
+	private boolean suppressRequest=false;
 	private Thread thread;
-	private Transmitter transmitter;
-
-	/**
-	 * Controls thread access to hasControl field. Has to be acquired as well when RemoteBehavior accesses
-	 * shared resources like motors.
-	 */
-	private Object controlLock=new Object();
-	private boolean hasControl=false;
-	private boolean takeControl=false;
-	private boolean releaseControl=false;
-	
-	public RemoteBehavior() {
-		thread=new Thread(this);
-		thread.start();
-	}
 	
 	@Override
 	public void action() {
-		hasControl=true;
+		if(thread==null) {
+			suppressRequest=false;
+			thread=new Thread(this);
+			thread.start();
+		}
 	}
 
 	@Override
 	public void suppress() {
-		releaseControl=true;
-		while(true) {
-			synchronized(controlLock) {				
-				if(!hasControl) {
-					break;
+		if(thread!=null) {
+			suppressRequest=true;
+			while(thread.isAlive()) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
 				}
 			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
 		}
-		releaseControl=false;
 	}
 
 	@Override
 	public boolean takeControl() {
-		return takeControl;
+		return true;
 	}
 
 	@Override
 	public void run() {
+		boolean lightOn=false;
 		
-		while(true) {
+		while(!suppressRequest) {
 			
-			takeControl=false;
-			hasControl=false;
+			/*
+			if(lightOn) {
+				RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);
+			} else {
+				RoomRover.getInstance().getLightSensor().setFloodlight(false);				
+			}*/
+			
+			lightOn=!lightOn;
 			
 			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {}					
-
-			
-			try {
-				transmitter=new Transmitter();
-
-				boolean lightOn=false;
-				while(transmitter.isListening()) {
-
-					if(lightOn) {
-						RoomRover.getInstance().getLightSensor().setFloodlight(false);
-						lightOn=false;
-					} else {
-						RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);						
-						lightOn=true;
-					}
-					
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {}
-				}
-				
-				takeControl=true;
-				
-				while(transmitter.isConnected()) {
-
-					synchronized(controlLock) {
-						if(hasControl) {
-							if(lightOn) {
-								RoomRover.getInstance().getLightSensor().setFloodlight(false);
-								lightOn=false;
-							} else {
-								RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);						
-								lightOn=true;
-							}
-							if(releaseControl) {
-								hasControl=false;
-							}
-						}
-					}
-					
-					transmitter.getMessageCoder().encodeKeepalive();
-
-					try {
-						Thread.sleep(250);
-					} catch (InterruptedException e) {}
-				}
-				
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
 			}
-			catch(Throwable t) {
-				while(transmitter!=null&&transmitter.isConnected()) {
-					transmitter.setDisconnectRequest(true);
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {}					
-				}
-			}
-			
-			transmitter=null;
 			
 		}
 		
-	}
-
-	public Object getControlLock() {
-		return controlLock;
-	}
-
-	public boolean hasControl() {
-		return hasControl;
-	}
-	
-	public MessageCoder getMessageCoder() {
-		Transmitter trans=transmitter;
-		if(trans!=null) {
-			return trans.getMessageCoder();
-		} else {
-			return null;
-		}
 	}
 
 }

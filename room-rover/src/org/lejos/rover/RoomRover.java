@@ -11,10 +11,16 @@ import lejos.robotics.subsumption.Behavior;
 public class RoomRover {
 
 	private Arbitrator arbitrator;
+	private RemoteLink remoteLink;
+	
 	private ColorLightSensor lightSensor;
-
+		
 	public Arbitrator getArbitrator() {
 		return arbitrator;
+	}
+	
+	public RemoteLink getRemoteLink() {
+		return remoteLink;
 	}
 
 	public ColorLightSensor getLightSensor() {
@@ -23,18 +29,24 @@ public class RoomRover {
 	
 	public RoomRover() {
 		
+		Behavior[] behaviors=new Behavior[] {
+				new InactiveBehavior(),
+				new RemoteBehavior()
+		};
+		arbitrator = new Arbitrator(behaviors);		
+		remoteLink=new RemoteLink();
 		lightSensor = new ColorLightSensor(SensorPort.S2,ColorLightSensor.TYPE_COLORNONE);
 
-		Behavior[] behaviors=new Behavior[] {
-				new RemoteBehavior(),
-				new InactiveBehavior()
-		};
-		arbitrator = new Arbitrator(behaviors);
 	}
 	
-	public void start() {
-		LCD.drawString("Room Rover 0.1", 0, 0);
+	protected void start() {
+		LCD.drawString("Room Rover 0.2", 0, 0);
+		remoteLink.start();
 		arbitrator.start();
+	}
+	
+	protected void stop() {
+		remoteLink.stop();
 	}
 		
 	private static RoomRover rover;
@@ -52,6 +64,7 @@ public class RoomRover {
 		      }
 
 		      public void buttonReleased(Button b) {
+		    	  rover.stop();
 		    	  System.exit(0);
 		      }
 		    });
