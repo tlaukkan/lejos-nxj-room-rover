@@ -7,7 +7,7 @@ public class ObservationCone {
 	private float orientationAngle; 
 	private float openingAngle;
 	private float length;
-	private float lengthAccuracy=0.2f;
+	private float lengthAccuracy=0.10f;
 	private boolean hit;
 	
 	public ObservationCone(Vector2f position, float orientationAngle, float openingAngle,
@@ -60,6 +60,9 @@ public class ObservationCone {
 	private boolean angleCloserThan(float angle1, float angle2, float maxDelta) {
 		float normalizedAngle1=angle1%(2*((float)Math.PI));
 		float normalizedAngle2=angle2%(2*((float)Math.PI));
+		if(Math.abs(normalizedAngle1-normalizedAngle2)<maxDelta) {
+			return true;
+		}
 		if(normalizedAngle1<0) {
 			normalizedAngle1+=2*((float)Math.PI);
 		}
@@ -82,10 +85,14 @@ public class ObservationCone {
 		float angle=vector.sub(position).angle();
 		float normalizedAngle1=orientationAngle%(2*((float)Math.PI));
 		float normalizedAngle2=angle%(2*((float)Math.PI));
+		float delta=Math.abs(normalizedAngle1-normalizedAngle2);
+		if(delta<openingAngle) {
+			return delta;
+		}
 		if(normalizedAngle1<0) {
 			normalizedAngle1+=2*((float)Math.PI);
 		}
-		float delta=Math.abs(normalizedAngle1-normalizedAngle2);
+		delta=Math.abs(normalizedAngle1-normalizedAngle2);
 		if(delta<openingAngle) {
 			return delta;
 		}

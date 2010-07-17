@@ -19,6 +19,9 @@ public class ImageCanvas extends Canvas {
 		g.drawImage(image,0,0,null);
 	}
 	
+	public void setImage(Image image) {
+		this.image=image;
+	}
 	
 
 

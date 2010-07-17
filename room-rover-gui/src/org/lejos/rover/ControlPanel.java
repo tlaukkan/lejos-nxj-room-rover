@@ -20,6 +20,7 @@ public class ControlPanel extends JPanel {
 		panel.setLayout(panelLayout);
 		this.add(panel,BorderLayout.CENTER);
 		panel.add(new ConnectionPanel());
+		panel.add(new MapperPanel());
 	}
 	
 }

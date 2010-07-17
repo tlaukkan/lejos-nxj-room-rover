@@ -1,5 +1,7 @@
 package org.lejos.rover;
 
+import org.lejos.rover.mapper.ObservationCone;
+import org.lejos.rover.math.Vector2f;
 import org.lejos.rover.remote.MessageListener;
 import org.lejos.rover.remote.LinkListener;
 import org.lejos.rover.remote.RemoteLink;
@@ -49,11 +51,6 @@ public class EventBroker implements LinkListener,MessageListener {
 	public void messageReceived(Message message) {
 		if(message.getType()==KeepaliveMessage.TYPE) {
 			System.out.print(".");
-		}
-
-		if(message.getType()==RadarPingMessage.TYPE) {
-			RadarPingMessage ping=(RadarPingMessage) message;
-			System.out.println("Radar ping x: "+ping.getX()+" y :"+ping.getY()+" a: "+ping.getAngle()+" d: "+ping.getDistance());
 		}
 	}
 

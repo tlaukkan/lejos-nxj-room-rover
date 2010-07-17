@@ -15,7 +15,7 @@ public class Radar implements Runnable {
 
 	private double fieldOfView=90;
 	private double motorToRadarAngleRatio=1.8;
-	private int radarSweepSpeed=30;
+	private int radarSweepSpeed=15;
 	
 	public double getFieldOfView() {
 		return fieldOfView;
