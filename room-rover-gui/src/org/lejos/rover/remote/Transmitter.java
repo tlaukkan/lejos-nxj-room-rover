@@ -8,22 +8,26 @@ import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommException;
 import lejos.pc.comm.NXTInfo;
 
+import org.lejos.rover.remote.message.Message;
+import org.lejos.rover.remote.message.MessageFactory;
+
 public class Transmitter implements Runnable {
-		
+
+	private RoverRemote remote;
 	private Thread thread;
 	private NXTComm communicator;
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
-	private MessageCoder messageCoder;
 	private NXTInfo nxt;
-	private boolean disconnectRequest;
+	private boolean stopRequest;
 	private long lastReceiveTime;
 
 	public void setStopRequest(boolean stopRequest) {
-		this.disconnectRequest = stopRequest;
+		this.stopRequest = stopRequest;
 	}
 
-	public Transmitter(NXTComm communicator, NXTInfo nxt) {
+	public Transmitter(RoverRemote remote, NXTComm communicator, NXTInfo nxt) {
+		this.remote=remote;
 		this.communicator=communicator;
 		this.nxt=nxt;
 	}
@@ -40,7 +44,6 @@ public class Transmitter implements Runnable {
 
 		inputStream=new DataInputStream(communicator.getInputStream());
 		outputStream=new DataOutputStream(communicator.getOutputStream());
-		messageCoder=new MessageCoder(inputStream,outputStream);
 		
 		thread=new Thread(this);
 		thread.start();
@@ -48,7 +51,7 @@ public class Transmitter implements Runnable {
 	}
 	
 	public void disconnect() {
-		disconnectRequest=true;
+		stopRequest=true;
 		try {
 			communicator.close();
 		} catch (IOException e1) {
@@ -65,29 +68,46 @@ public class Transmitter implements Runnable {
 		
 		lastReceiveTime = System.currentTimeMillis();
 		
-		while(!disconnectRequest) {
+		while(!stopRequest) {
 			
 			try {
 				
-				messageCoder.decodeMessage();
-
-				lastReceiveTime=System.currentTimeMillis();			
+				int messageType = inputStream.readUnsignedByte();
 				
-			} catch (IOException ex) {
-				ex.printStackTrace();
-				break;
+				Message message = MessageFactory.constructMessage(messageType);
+				if(message!=null) {
+					message.read(inputStream);
+	
+					synchronized (this.remote.messageListeners) {
+						for (MessageListener listener : this.remote.messageListeners) {
+							listener.messageReceived(message);
+						}
+					}
+				}
+				else {
+					stopRequest=true; // Unknown message type. Probably transmission error.				e.printStackTrace();
+				}
+				
+			} catch (IOException e) {
+				stopRequest=true;
+				e.printStackTrace();
 			}
-						
+
+			lastReceiveTime=System.currentTimeMillis();			
+										
 		}
 				
 	}
-
-	public void sendKeepAlive() {
-		try {
-			messageCoder.encodeKeepalive();
-		} catch (IOException e) {
-			e.printStackTrace();
-			disconnectRequest=true;
+	
+	public void encodeMessage(Message message) {
+		if(isConnected()) {
+			try {
+				outputStream.writeByte(message.getType());
+				message.write(outputStream);
+			} catch (IOException e) {
+				stopRequest=true;
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -95,8 +115,4 @@ public class Transmitter implements Runnable {
 		return lastReceiveTime;
 	}
 
-	public MessageCoder getMessageCoder() {
-		return messageCoder;
-	}
-	
 }

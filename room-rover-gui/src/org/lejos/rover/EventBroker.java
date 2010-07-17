@@ -3,18 +3,11 @@ package org.lejos.rover;
 import org.lejos.rover.remote.MessageListener;
 import org.lejos.rover.remote.RemoteListener;
 import org.lejos.rover.remote.RoverRemote;
+import org.lejos.rover.remote.message.KeepaliveMessage;
+import org.lejos.rover.remote.message.Message;
+import org.lejos.rover.remote.message.RadarPingMessage;
 
 public class EventBroker implements RemoteListener,MessageListener {
-
-	@Override
-	public void keepalive() {
-		System.out.print(".");
-	}
-
-	@Override
-	public void radarPing(int x, int y, int angle, int distance) {
-		System.out.println("Radar ping x: "+x+" y :"+y+" a: "+angle+" d: "+distance);
-	}
 
 	@Override
 	public void bluetoothFailed(RoverRemote remote) {
@@ -26,7 +19,6 @@ public class EventBroker implements RemoteListener,MessageListener {
 
 	@Override
 	public void roverConnectCompleted(RoverRemote remote) {
-		remote.getTransmitter().getMessageCoder().addMessageListener(this);
 	}
 
 	@Override
@@ -51,6 +43,18 @@ public class EventBroker implements RemoteListener,MessageListener {
 
 	@Override
 	public void searchStarted(RoverRemote remote) {
+	}
+
+	@Override
+	public void messageReceived(Message message) {
+		if(message.getType()==KeepaliveMessage.TYPE) {
+			System.out.print(".");
+		}
+
+		if(message.getType()==RadarPingMessage.TYPE) {
+			RadarPingMessage ping=(RadarPingMessage) message;
+			System.out.println("Radar ping x: "+ping.getX()+" y :"+ping.getY()+" a: "+ping.getAngle()+" d: "+ping.getDistance());
+		}
 	}
 
 }

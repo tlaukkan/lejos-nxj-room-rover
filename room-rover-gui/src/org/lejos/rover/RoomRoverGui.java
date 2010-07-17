@@ -43,6 +43,7 @@ public class RoomRoverGui implements Runnable, WindowListener{
 		eventBroker=new EventBroker();
 		roverRemote=new RoverRemote();
 		roverRemote.addRemoteListener(eventBroker);
+		roverRemote.addMessageListener(eventBroker);
 		
 		frame=new JFrame("Room Rover GUI");
 		

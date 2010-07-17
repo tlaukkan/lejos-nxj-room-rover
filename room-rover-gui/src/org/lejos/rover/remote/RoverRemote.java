@@ -7,11 +7,18 @@ import lejos.pc.comm.NXTComm;
 import lejos.pc.comm.NXTCommFactory;
 import lejos.pc.comm.NXTInfo;
 
+import org.lejos.rover.remote.message.KeepaliveMessage;
+import org.lejos.rover.remote.message.Message;
+
 public class RoverRemote implements Runnable {
 	
 	private NXTComm communicator;
 
 	private List<RemoteListener> listeners=new ArrayList<RemoteListener>();
+	protected List<MessageListener> messageListeners=new ArrayList<MessageListener>();
+	private List<Message> messagesToSend=new ArrayList<Message>();
+
+	
 	private Thread thread;
 	private NXTInfo[] availableRovers;
 	private NXTInfo targetRover;
@@ -30,6 +37,26 @@ public class RoverRemote implements Runnable {
 	
 	public void stop() {
 		stopRequest=true;
+	}
+	
+	public void sendMessage(Message message) {
+		synchronized(messagesToSend) {
+			if(isConnected()) {
+				messagesToSend.add(message);
+			}
+		}
+	}
+
+	public void addMessageListener(MessageListener listener) {
+		synchronized (messageListeners) {
+			messageListeners.add(listener);
+		}
+	}
+
+	public void removeMessageListener(MessageListener listener) {
+		synchronized (messageListeners) {
+			messageListeners.remove(listener);
+		}
 	}
 	
 	public void addRemoteListener(RemoteListener listener) {
@@ -61,7 +88,7 @@ public class RoverRemote implements Runnable {
 			return false;
 		}
 		
-		Transmitter newTransmitter=new Transmitter(communicator,targetRover);
+		Transmitter newTransmitter=new Transmitter(this,communicator,targetRover);
 		synchronized(listeners) {
 			for(RemoteListener listener : listeners) {
 				listener.roverConnectStarted(this);
@@ -143,6 +170,9 @@ public class RoverRemote implements Runnable {
 			
 			if(transmitter!=null&&!transmitter.isConnected()) {
 				transmitter=null;
+				synchronized(messagesToSend) {
+					messagesToSend.clear();
+				}
 				synchronized(listeners) {
 					for(RemoteListener listener : listeners) {
 						listener.roverDisconnected(this);
@@ -151,7 +181,7 @@ public class RoverRemote implements Runnable {
 			}
 			
 			if(isConnected()) {
-				transmitter.sendKeepAlive();
+				transmitter.encodeMessage(new KeepaliveMessage());
 			}
 									
 			try {
