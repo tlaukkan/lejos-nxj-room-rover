@@ -1,6 +1,5 @@
 package org.lejos.rover;
 
-import lejos.robotics.Colors.Color;
 import lejos.robotics.subsumption.Behavior;
 
 public class RemoteBehavior implements Behavior, Runnable {
@@ -32,22 +31,18 @@ public class RemoteBehavior implements Behavior, Runnable {
 
 	@Override
 	public boolean takeControl() {
-		return true;
+		return false;
 	}
 
 	@Override
-	public void run() {
-		boolean lightOn=false;
-		
+	public void run() {		
 		while(!suppressRequest) {
 			
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
-			}
-			
-		}
-		
+			}	
+		}		
 	}
 
 }

@@ -1,6 +1,6 @@
-package org.lejos.rover;
+package org.lejos.rover.remote;
 
-import java.io.IOException;
+
 
 public class RemoteLink implements Runnable {
 
@@ -42,12 +42,12 @@ public class RemoteLink implements Runnable {
 								
 				while(transmitter.isConnected()) {
 					
-					try {
-						transmitter.getMessageCoder().encodeKeepalive();
-					} catch(IOException e) {
+					MessageCoder coder=transmitter.getMessageCoder();
+					coder.encodeKeepalive();					
+					if(coder.isException()) {
 						transmitter.disconnect();
 					}
-
+					
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {}

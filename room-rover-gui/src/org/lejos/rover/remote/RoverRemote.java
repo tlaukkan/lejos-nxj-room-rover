@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lejos.pc.comm.NXTComm;
-import lejos.pc.comm.NXTCommBluecove;
 import lejos.pc.comm.NXTCommFactory;
 import lejos.pc.comm.NXTInfo;
 
@@ -96,7 +95,7 @@ public class RoverRemote implements Runnable {
 	@Override
 	public void run() {
 		try {
-			communicator = new NXTCommBluecove();
+			communicator = NXTCommFactory.createNXTComm(NXTCommFactory.BLUETOOTH);
 			synchronized(listeners) {
 				for(RemoteListener listener : listeners) {
 					listener.bluetoothInitialized(this);

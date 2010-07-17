@@ -1,6 +1,5 @@
 package org.lejos.rover;
 
-import lejos.robotics.Colors.Color;
 import lejos.robotics.subsumption.Behavior;
 
 public class InactiveBehavior implements Behavior, Runnable {

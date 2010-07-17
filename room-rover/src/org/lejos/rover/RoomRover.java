@@ -7,11 +7,11 @@ import lejos.nxt.LCD;
 import lejos.nxt.Motor;
 import lejos.nxt.SensorPort;
 import lejos.nxt.UltrasonicSensor;
-import lejos.nxt.comm.RConsole;
 import lejos.robotics.subsumption.Arbitrator;
 import lejos.robotics.subsumption.Behavior;
 
 import org.lejos.rover.radar.Radar;
+import org.lejos.rover.remote.RemoteLink;
 
 public class RoomRover {
 	
@@ -84,7 +84,25 @@ public class RoomRover {
 		      }
 
 		      public void buttonReleased(Button b) {
-		    	  rover.stop();
+		    	  Thread thread=new Thread(new Runnable() {					
+		    		  	@Override
+						public void run() {
+		    		  		RoomRover.getInstance().stop();
+						}
+		    	  });
+		    	  
+		    	  thread.start();
+		    	  
+		    	  for(int i=0;i<20;i++) {
+		    		if(!thread.isAlive()) {
+		    			break;
+		    		}
+		    		try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+					}
+		    	  }
+		    	  
 		    	  System.exit(0);
 		      }
 		    });

@@ -125,6 +125,11 @@ public class Radar implements Runnable {
 					}
 				}
 
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+				}
+
 			}
 
 			direction*=-1;
@@ -132,7 +137,24 @@ public class Radar implements Runnable {
 
 		motor.setSpeed(360);
 		motor.rotateTo(0, false);
+		
+		while(motor.isMoving()) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}
+		}
+		
+		motor.setSpeed(10);
+		motor.rotateTo(0, false);
 
+		while(motor.isMoving()) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+			}
+		}
+		
 		thread = null;
 		
 		synchronized(radarListeners) {

@@ -1,24 +1,24 @@
-package org.lejos.rover;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+package org.lejos.rover.remote;
 
 import lejos.nxt.comm.BTConnection;
 import lejos.nxt.comm.Bluetooth;
 import lejos.nxt.comm.NXTConnection;
 import lejos.robotics.Colors.Color;
 
+import org.lejos.rover.RoomRover;
+
 public class Transmitter implements Runnable {
 
-	private boolean disconnectRequest=false;
+	private boolean stopRequest=false;
 
 	private Thread thread;
-	private DataInputStream inputStream;
-	private DataOutputStream outputStream;
 	private MessageCoder messageCoder;
 	private BTConnection connection;
 	
+	public MessageCoder getMessageCoder() {
+		return messageCoder;
+	}
+
 	public Transmitter() {
 		thread=new Thread(this);
 	}
@@ -33,7 +33,7 @@ public class Transmitter implements Runnable {
 		
 		try {
 	
-			while(connection==null&&!disconnectRequest) {
+			while(connection==null&&!stopRequest) {
 				try {
 					//connection = Bluetooth.waitForConnection();
 					connection = Bluetooth.waitForConnection(5000,NXTConnection.PACKET);
@@ -47,28 +47,12 @@ public class Transmitter implements Runnable {
 				return;
 			}
 			
-			inputStream = connection.openDataInputStream();
-			outputStream = connection.openDataOutputStream();
-			messageCoder = new MessageCoder(inputStream,outputStream);
+			messageCoder = new MessageCoder(connection.openDataInputStream(),connection.openDataOutputStream());
 			
 			RoomRover.getInstance().getLightSensor().setFloodlight(Color.GREEN);
 	
-			while(!disconnectRequest) {
-				try {
-					messageCoder.decodeMessage();
-				} catch (IOException e) {
-					disconnectRequest=true;
-					messageCoder.disconnect();
-					/*try {
-						inputStream.close();
-					} catch (IOException ex) {
-					}
-					try {
-						outputStream.close();
-					} catch (IOException ex) {
-					}*/					
-					//connection.close();
-				}
+			while(messageCoder.isConnected()) {
+				messageCoder.decodeMessage();
 			}
 	
 		} 
@@ -77,8 +61,6 @@ public class Transmitter implements Runnable {
 		}
 
 		messageCoder=null;
-		inputStream=null;
-		outputStream=null;
 		connection=null;
 		
 		RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);
@@ -93,27 +75,11 @@ public class Transmitter implements Runnable {
 	}
 
 	public void disconnect() {
-		disconnectRequest = true;
+		stopRequest = true;
 
 		if(messageCoder!=null) {
 			messageCoder.disconnect();
 		}
-		
-		/*
-		if(inputStream!=null) {
-			try {
-				inputStream.close();
-			} catch (IOException e) {
-			}
-		}
-
-		if(outputStream!=null) {
-			try {
-				outputStream.close();
-			} catch (IOException e) {
-			}
-		}
-		*/
 
 		if(connection!=null) {
 			synchronized(messageCoder) {
@@ -130,10 +96,6 @@ public class Transmitter implements Runnable {
 			} catch (InterruptedException e) {}
 		}
 		
-	}
-
-	public MessageCoder getMessageCoder() {
-		return messageCoder;
 	}
 	
 }

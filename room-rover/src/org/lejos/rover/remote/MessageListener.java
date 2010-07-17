@@ -1,4 +1,4 @@
-package org.lejos.rover;
+package org.lejos.rover.remote;
 
 public interface MessageListener {
 	public void keepalive();
