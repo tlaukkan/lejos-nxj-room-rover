@@ -1,4 +1,4 @@
-package org.lejos.rover;
+package org.lejos.rover.remote;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -9,7 +9,6 @@ import java.util.ArrayList;
 public class MessageCoder {
 	private static int KEEPALIVE=1;
 	private static int RADARPING=20;
-	private boolean connected=true;
 	
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
@@ -20,12 +19,6 @@ public class MessageCoder {
 		super();
 		this.inputStream = inputStream;
 		this.outputStream = outputStream;
-	}
-	
-	public void disconnect() {
-		synchronized(this) {
-			connected=false;
-		}
 	}
 	
 	public void addMessageListener(MessageListener listener) {
@@ -69,28 +62,18 @@ public class MessageCoder {
 	
 	public void encodeKeepalive() throws IOException {
 		synchronized(this) {
-			if(connected) {
-				outputStream.writeByte(KEEPALIVE);
-				outputStream.flush();
-			}
+			outputStream.writeByte(KEEPALIVE);
 		}
 	}
 	
 	public void encodeRadarPing(int x, int y, int angle, int distance) throws IOException {
 		synchronized(this) {
-			if(connected) {
-				outputStream.writeByte(RADARPING);
-				outputStream.writeInt(x);
-				outputStream.writeInt(y);
-				outputStream.writeInt(angle);
-				outputStream.writeInt(distance);
-				outputStream.flush();
-			}
+			outputStream.writeByte(RADARPING);
+			outputStream.writeInt(x);
+			outputStream.writeInt(y);
+			outputStream.writeInt(angle);
+			outputStream.writeInt(distance);
 		}
-	}
-
-	public boolean isConnected() {
-		return connected;
 	}
 
 		

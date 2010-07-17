@@ -11,12 +11,12 @@ import lejos.robotics.Colors.Color;
 
 public class Transmitter implements Runnable {
 
+	private boolean disconnectRequest=false;
+
 	private Thread thread;
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
 	private MessageCoder messageCoder;
-	
-	private boolean disconnectRequest=false;
 	private BTConnection connection;
 	
 	public Transmitter() {
@@ -57,17 +57,17 @@ public class Transmitter implements Runnable {
 				try {
 					messageCoder.decodeMessage();
 				} catch (IOException e) {
+					disconnectRequest=true;
 					messageCoder.disconnect();
-					try {
+					/*try {
 						inputStream.close();
 					} catch (IOException ex) {
 					}
 					try {
 						outputStream.close();
 					} catch (IOException ex) {
-					}					
+					}*/					
 					//connection.close();
-					break;
 				}
 			}
 	
@@ -80,15 +80,16 @@ public class Transmitter implements Runnable {
 		inputStream=null;
 		outputStream=null;
 		connection=null;
+		
 		RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);
 	}
 
 	public boolean isListening() {
-		return thread!=null&&thread.isAlive()&&connection==null;
+		return (thread!=null&&thread.isAlive())&&(messageCoder==null||!messageCoder.isConnected());
 	}
 
 	public boolean isConnected() {
-		return thread!=null&&thread.isAlive()&&connection!=null;
+		return (thread!=null&&thread.isAlive())&&(messageCoder!=null&&messageCoder.isConnected());
 	}
 
 	public void disconnect() {
@@ -98,6 +99,7 @@ public class Transmitter implements Runnable {
 			messageCoder.disconnect();
 		}
 		
+		/*
 		if(inputStream!=null) {
 			try {
 				inputStream.close();
@@ -111,12 +113,18 @@ public class Transmitter implements Runnable {
 			} catch (IOException e) {
 			}
 		}
-		
+		*/
+
 		if(connection!=null) {
-			connection.close();
+			synchronized(messageCoder) {
+				connection.close();
+			}
 		}
-				
+
 		while(thread!=null&&thread.isAlive()) {
+			
+			thread.interrupt();
+
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
