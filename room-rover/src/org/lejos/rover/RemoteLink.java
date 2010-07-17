@@ -20,17 +20,21 @@ public class RemoteLink implements Runnable {
 		while(!stopRequest) {
 					
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {}					
 			
 			try {
 				transmitter=new Transmitter();
 				
 				transmitter.listen();
+				
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {}					
 
 				while(transmitter.isListening()) {					
 					try {
-						Thread.sleep(1000);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {}
 				}
 								
@@ -49,13 +53,19 @@ public class RemoteLink implements Runnable {
 				System.out.println(t.toString());
 			}
 
-			while(transmitter!=null&&transmitter.isConnected()) {
-				transmitter.disconnect();
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {}					
+			try {
+				while(transmitter!=null&&transmitter.isConnected()) {
+					transmitter.disconnect();
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {}					
+				}
+			}
+			catch(Throwable t) {
+				System.out.println(t.toString());
 			}
 
+			
 			transmitter=null;
 			
 		}
@@ -76,8 +86,8 @@ public class RemoteLink implements Runnable {
 	}
 
 	public void stop() {
-		transmitter.disconnect();
 		stopRequest=true;
+		transmitter.disconnect();
 		while(thread.isAlive()) {
 			try {
 				Thread.sleep(10);

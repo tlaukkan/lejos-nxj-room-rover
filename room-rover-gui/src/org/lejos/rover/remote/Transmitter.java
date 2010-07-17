@@ -94,5 +94,9 @@ public class Transmitter implements Runnable {
 	public long getLastReceiveTime() {
 		return lastReceiveTime;
 	}
+
+	public MessageCoder getMessageCoder() {
+		return messageCoder;
+	}
 	
 }

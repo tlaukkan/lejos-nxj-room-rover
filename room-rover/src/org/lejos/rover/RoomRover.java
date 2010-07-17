@@ -4,14 +4,24 @@ import lejos.nxt.Button;
 import lejos.nxt.ButtonListener;
 import lejos.nxt.ColorLightSensor;
 import lejos.nxt.LCD;
+import lejos.nxt.Motor;
 import lejos.nxt.SensorPort;
+import lejos.nxt.UltrasonicSensor;
+import lejos.nxt.comm.RConsole;
 import lejos.robotics.subsumption.Arbitrator;
 import lejos.robotics.subsumption.Behavior;
 
+import org.lejos.rover.radar.Radar;
+
 public class RoomRover {
+	
+	private static RoomRover rover;
 
 	private Arbitrator arbitrator;
+	private EventBroker eventBroker;
+	
 	private RemoteLink remoteLink;
+	private Radar radar;
 	
 	private ColorLightSensor lightSensor;
 		
@@ -30,32 +40,42 @@ public class RoomRover {
 	public RoomRover() {
 		
 		Behavior[] behaviors=new Behavior[] {
-				new InactiveBehavior(),
-				new RemoteBehavior()
+				//new InactiveBehavior(),
+				//new RemoteBehavior()
 		};
-		arbitrator = new Arbitrator(behaviors);		
-		remoteLink=new RemoteLink();
+		
 		lightSensor = new ColorLightSensor(SensorPort.S2,ColorLightSensor.TYPE_COLORNONE);
+		
+		eventBroker=new EventBroker();
 
+		remoteLink=new RemoteLink();
+		
+		radar = new Radar(new UltrasonicSensor(SensorPort.S3), Motor.A);
+
+		radar.addRadarListener(eventBroker);
+
+		arbitrator = new Arbitrator(behaviors);		
+		
 	}
 	
 	protected void start() {
 		LCD.drawString("Room Rover 0.2", 0, 0);
 		remoteLink.start();
+		radar.start();
 		arbitrator.start();
 	}
 	
 	protected void stop() {
+		radar.stop();
 		remoteLink.stop();
 	}
-		
-	private static RoomRover rover;
-	
+			
 	public static RoomRover getInstance() {
 		return rover;
 	}
 	
 	public static void main(String[] args) {
+		
 		rover=new RoomRover();
 
 		Button.ESCAPE.addButtonListener(new ButtonListener() {

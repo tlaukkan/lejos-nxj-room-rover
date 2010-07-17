@@ -32,14 +32,17 @@ public class RoomRoverGui implements Runnable, WindowListener{
 	}
 	
 	private JFrame frame;
-	private RoverRemote remote;
+	private RoverRemote roverRemote;
+	private EventBroker eventBroker;
 	
 	public RoomRoverGui()
 	{
 	}
 	
 	public void run() {
-		remote=new RoverRemote();
+		eventBroker=new EventBroker();
+		roverRemote=new RoverRemote();
+		roverRemote.addRemoteListener(eventBroker);
 		
 		frame=new JFrame("Room Rover GUI");
 		
@@ -61,11 +64,11 @@ public class RoomRoverGui implements Runnable, WindowListener{
 		//frame.pack();
 		frame.setVisible(true);	
 		
-		remote.start();
+		roverRemote.start();
 	}
 	
 	public RoverRemote getRemote() {
-		return remote;
+		return roverRemote;
 	}
 
 	@Override

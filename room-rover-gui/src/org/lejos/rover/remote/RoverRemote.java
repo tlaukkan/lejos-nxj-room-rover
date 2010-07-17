@@ -176,5 +176,9 @@ public class RoverRemote implements Runnable {
 	public void setTargetRover(NXTInfo targetRover) {
 		this.targetRover = targetRover;
 	}
+
+	public Transmitter getTransmitter() {
+		return transmitter;
+	}
 	
 }

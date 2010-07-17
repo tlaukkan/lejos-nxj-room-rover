@@ -41,15 +41,6 @@ public class RemoteBehavior implements Behavior, Runnable {
 		
 		while(!suppressRequest) {
 			
-			/*
-			if(lightOn) {
-				RoomRover.getInstance().getLightSensor().setFloodlight(Color.RED);
-			} else {
-				RoomRover.getInstance().getLightSensor().setFloodlight(false);				
-			}*/
-			
-			lightOn=!lightOn;
-			
 			try {
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
