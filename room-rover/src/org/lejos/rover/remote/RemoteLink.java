@@ -12,6 +12,7 @@ public class RemoteLink implements Runnable {
 	private Transmitter transmitter;
 	private boolean stopRequest = false;
 	
+	protected ArrayList listeners = new ArrayList();
 	private ArrayList messagesToSend=new ArrayList();
 
 	public RemoteLink() {
@@ -23,6 +24,18 @@ public class RemoteLink implements Runnable {
 			if(isConnected()) {
 				messagesToSend.add(message);
 			}
+		}
+	}
+
+	public void addMessageListener(MessageListener listener) {
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
+	}
+
+	public void removeMessageListener(MessageListener listener) {
+		synchronized (listeners) {
+			listeners.remove(listener);
 		}
 	}
 	
@@ -40,7 +53,7 @@ public class RemoteLink implements Runnable {
 			} catch (InterruptedException e) {
 			}
 			
-			transmitter = new Transmitter();
+			transmitter = new Transmitter(this);
 
 			transmitter.listen();
 

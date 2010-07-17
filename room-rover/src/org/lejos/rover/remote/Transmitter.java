@@ -3,7 +3,6 @@ package org.lejos.rover.remote;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import lejos.nxt.comm.BTConnection;
 import lejos.nxt.comm.Bluetooth;
@@ -13,31 +12,19 @@ import org.lejos.rover.RoomRover;
 import org.lejos.rover.remote.message.Message;
 import org.lejos.rover.remote.message.MessageFactory;
 
-@SuppressWarnings("unchecked")
 public class Transmitter implements Runnable {
 
 	private boolean stopRequest = false;
 
+	private RemoteLink link;
 	private Thread thread;
 	private BTConnection connection;
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
-	private ArrayList listeners = new ArrayList();
 
-	public Transmitter() {
+	public Transmitter(RemoteLink link) {
+		this.link=link;
 		thread = new Thread(this);
-	}
-
-	public void addMessageListener(MessageListener listener) {
-		synchronized (listeners) {
-			listeners.add(listener);
-		}
-	}
-
-	public void removeMessageListener(MessageListener listener) {
-		synchronized (listeners) {
-			listeners.remove(listener);
-		}
 	}
 
 	public void listen() {
@@ -69,8 +56,8 @@ public class Transmitter implements Runnable {
 				if(message!=null) {
 					message.read(inputStream);
 	
-					synchronized (listeners) {
-						for (Object listener : listeners) {
+					synchronized (this.link.listeners) {
+						for (Object listener : this.link.listeners) {
 							((MessageListener) listener).messageReceived(message);
 						}
 					}
