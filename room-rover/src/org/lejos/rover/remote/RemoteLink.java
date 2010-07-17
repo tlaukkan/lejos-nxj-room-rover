@@ -70,7 +70,7 @@ public class RemoteLink implements Runnable {
 			}
 
 			while (transmitter.isConnected()) {
-
+				
 				transmitter.encodeMessage(new KeepaliveMessage());
 
 				while(messagesToSend.size()>0) {
@@ -80,7 +80,12 @@ public class RemoteLink implements Runnable {
 					}
 					transmitter.encodeMessage(message);
 				}
-								
+
+				// Check for connection timeout.
+				if(transmitter.getLastReceiveTime()!=0&&System.currentTimeMillis()-transmitter.getLastReceiveTime()>5000) {
+					transmitter.disconnect();
+				}
+
 				try {
 					Thread.sleep(100);
 				} catch (InterruptedException e) {

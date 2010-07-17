@@ -1,48 +1,48 @@
 package org.lejos.rover;
 
 import org.lejos.rover.remote.MessageListener;
-import org.lejos.rover.remote.RemoteListener;
-import org.lejos.rover.remote.RoverRemote;
+import org.lejos.rover.remote.LinkListener;
+import org.lejos.rover.remote.RemoteLink;
 import org.lejos.rover.remote.message.KeepaliveMessage;
 import org.lejos.rover.remote.message.Message;
 import org.lejos.rover.remote.message.RadarPingMessage;
 
-public class EventBroker implements RemoteListener,MessageListener {
+public class EventBroker implements LinkListener,MessageListener {
 
 	@Override
-	public void bluetoothFailed(RoverRemote remote) {
+	public void bluetoothFailed(RemoteLink remote) {
 	}
 
 	@Override
-	public void bluetoothInitialized(RoverRemote remote) {
+	public void bluetoothInitialized(RemoteLink remote) {
 	}
 
 	@Override
-	public void roverConnectCompleted(RoverRemote remote) {
+	public void connectCompleted(RemoteLink remote) {
 	}
 
 	@Override
-	public void roverConnectFailed(RoverRemote remote) {
+	public void connectFailed(RemoteLink remote) {
 	}
 
 	@Override
-	public void roverConnectStarted(RoverRemote remote) {
+	public void connectStarted(RemoteLink remote) {
 	}
 
 	@Override
-	public void roverDisconnected(RoverRemote remote) {
+	public void disconnected(RemoteLink remote) {
 	}
 
 	@Override
-	public void searchCompleted(RoverRemote remote) {
+	public void searchCompleted(RemoteLink remote) {
 	}
 
 	@Override
-	public void searchFailed(RoverRemote roverRemote) {		
+	public void searchFailed(RemoteLink roverRemote) {		
 	}
 
 	@Override
-	public void searchStarted(RoverRemote remote) {
+	public void searchStarted(RemoteLink remote) {
 	}
 
 	@Override

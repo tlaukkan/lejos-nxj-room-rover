@@ -21,6 +21,7 @@ public class Transmitter implements Runnable {
 	private BTConnection connection;
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
+	private long lastReceiveTime;
 
 	public Transmitter(RemoteLink link) {
 		this.link=link;
@@ -36,7 +37,7 @@ public class Transmitter implements Runnable {
 		RoomRover.getInstance().getLightSensor().setFloodlight(Color.BLUE);
 
 		connection = Bluetooth.waitForConnection();
-
+		
 		if (connection == null) {
 			return;
 		}
@@ -52,6 +53,8 @@ public class Transmitter implements Runnable {
 				
 				int messageType = inputStream.readUnsignedByte();
 				
+				lastReceiveTime=System.currentTimeMillis();
+
 				Message message = MessageFactory.constructMessage(messageType);
 				if(message!=null) {
 					message.read(inputStream);
@@ -115,6 +118,10 @@ public class Transmitter implements Runnable {
 			} catch (InterruptedException e) {
 			}
 		}
+	}
+
+	public long getLastReceiveTime() {
+		return lastReceiveTime;
 	}
 
 }

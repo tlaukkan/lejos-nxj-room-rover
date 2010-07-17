@@ -13,20 +13,24 @@ import org.lejos.rover.remote.message.MessageFactory;
 
 public class Transmitter implements Runnable {
 
-	private RoverRemote remote;
-	private Thread thread;
+	private RemoteLink remote;
 	private NXTComm communicator;
+	private NXTInfo nxt;
+
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
-	private NXTInfo nxt;
+
+	private Thread thread;
+
 	private boolean stopRequest;
+	private boolean connected=true;
 	private long lastReceiveTime;
 
 	public void setStopRequest(boolean stopRequest) {
 		this.stopRequest = stopRequest;
 	}
 
-	public Transmitter(RoverRemote remote, NXTComm communicator, NXTInfo nxt) {
+	public Transmitter(RemoteLink remote, NXTComm communicator, NXTInfo nxt) {
 		this.remote=remote;
 		this.communicator=communicator;
 		this.nxt=nxt;
@@ -60,19 +64,19 @@ public class Transmitter implements Runnable {
 	}
 	
 	public boolean isConnected() {
-		return thread.isAlive();
+		return connected;
 	}
 
 	@Override
 	public void run() {		
-		
-		lastReceiveTime = System.currentTimeMillis();
-		
+				
 		while(!stopRequest) {
 			
 			try {
 				
 				int messageType = inputStream.readUnsignedByte();
+				System.out.print("("+messageType+")");
+				lastReceiveTime=System.currentTimeMillis();			
 				
 				Message message = MessageFactory.constructMessage(messageType);
 				if(message!=null) {
@@ -85,18 +89,17 @@ public class Transmitter implements Runnable {
 					}
 				}
 				else {
-					stopRequest=true; // Unknown message type. Probably transmission error.				e.printStackTrace();
+					//stopRequest=true; // Unknown message type. Probably transmission error.				e.printStackTrace();
 				}
 				
 			} catch (IOException e) {
 				stopRequest=true;
 				e.printStackTrace();
 			}
-
-			lastReceiveTime=System.currentTimeMillis();			
 										
 		}
-				
+			
+		connected=false;
 	}
 	
 	public void encodeMessage(Message message) {

@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
-import org.lejos.rover.remote.RoverRemote;
+import org.lejos.rover.remote.RemoteLink;
 
 public class RoomRoverGui implements Runnable, WindowListener{
 
@@ -32,7 +32,7 @@ public class RoomRoverGui implements Runnable, WindowListener{
 	}
 	
 	private JFrame frame;
-	private RoverRemote roverRemote;
+	private RemoteLink remoteLink;
 	private EventBroker eventBroker;
 	
 	public RoomRoverGui()
@@ -41,9 +41,9 @@ public class RoomRoverGui implements Runnable, WindowListener{
 	
 	public void run() {
 		eventBroker=new EventBroker();
-		roverRemote=new RoverRemote();
-		roverRemote.addRemoteListener(eventBroker);
-		roverRemote.addMessageListener(eventBroker);
+		remoteLink=new RemoteLink();
+		remoteLink.addRemoteListener(eventBroker);
+		remoteLink.addMessageListener(eventBroker);
 		
 		frame=new JFrame("Room Rover GUI");
 		
@@ -65,11 +65,11 @@ public class RoomRoverGui implements Runnable, WindowListener{
 		//frame.pack();
 		frame.setVisible(true);	
 		
-		roverRemote.start();
+		remoteLink.start();
 	}
 	
-	public RoverRemote getRemote() {
-		return roverRemote;
+	public RemoteLink getRemoteLink() {
+		return remoteLink;
 	}
 
 	@Override

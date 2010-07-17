@@ -15,11 +15,11 @@ import javax.swing.SwingWorker;
 
 import lejos.pc.comm.NXTInfo;
 
-import org.lejos.rover.remote.RemoteListener;
-import org.lejos.rover.remote.RoverRemote;
+import org.lejos.rover.remote.LinkListener;
+import org.lejos.rover.remote.RemoteLink;
 import org.lejos.rover.ui.ColorIndicator;
 
-public class ConnectionPanel extends JPanel implements ActionListener, RemoteListener, Runnable {
+public class ConnectionPanel extends JPanel implements ActionListener, LinkListener, Runnable {
 	private static final long serialVersionUID = 1L;
 
 	private ColorIndicator bluetoothIndicator;
@@ -74,7 +74,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 		add(disconnectButton);
 		
 		
-		RoomRoverGui.getInstance().getRemote().addRemoteListener(this);
+		RoomRoverGui.getInstance().getRemoteLink().addRemoteListener(this);
 
 	}
 
@@ -84,20 +84,20 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 			//connectButton.setEnabled(false);
 			//searchButton.setEnabled(false);
 			//roverCombo.removeAllItems();
-			RoomRoverGui.getInstance().getRemote().search();
+			RoomRoverGui.getInstance().getRemoteLink().search();
 		}
 		if(e.getSource()==connectButton) {			
-			RoomRoverGui.getInstance().getRemote().setTargetRover(((RoverItem)roverCombo.getSelectedItem()).getRover());
+			RoomRoverGui.getInstance().getRemoteLink().setTargetRover(((RoverItem)roverCombo.getSelectedItem()).getRover());
 			Thread connectThread=new Thread(new Runnable() {				
 				@Override
 				public void run() {
-					RoomRoverGui.getInstance().getRemote().connect();
+					RoomRoverGui.getInstance().getRemoteLink().connect();
 				}
 			});
 			connectThread.start();
 		}
 		if(e.getSource()==disconnectButton) {
-			RoomRoverGui.getInstance().getRemote().disconnect();
+			RoomRoverGui.getInstance().getRemoteLink().disconnect();
 		}
 		if(e.getSource()==roverCombo) {
 			if(roverCombo.getSelectedItem()!=null) {
@@ -107,23 +107,23 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 
 	@Override
-	public void bluetoothInitialized(RoverRemote remote) {
+	public void bluetoothInitialized(RemoteLink remote) {
 		bluetoothIndicator.setColor(Color.green);		
 	}
 	
 	@Override
-	public void bluetoothFailed(RoverRemote remote) {
+	public void bluetoothFailed(RemoteLink remote) {
 		bluetoothIndicator.setColor(Color.red);		
 	}
 	
 	@Override
-	public void roverConnectCompleted(RoverRemote remote) {
+	public void connectCompleted(RemoteLink remote) {
 		connectionIndicator.setColor(Color.green);
 		disconnectButton.setEnabled(true);
 	}
 
 	@Override
-	public void roverDisconnected(RoverRemote remote) {
+	public void disconnected(RemoteLink remote) {
 		connectionIndicator.setColor(Color.black);
 		if(roverCombo.getSelectedItem()!=null) {
 			connectButton.setEnabled(true);
@@ -136,7 +136,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 	
 	@Override
-	public void searchStarted(RoverRemote remote) {
+	public void searchStarted(RemoteLink remote) {
 		availabilityIndicator.setColor(Color.yellow);
 		connectButton.setEnabled(false);
 		searchButton.setEnabled(false);
@@ -144,7 +144,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 
 	@Override
-	public void searchCompleted(RoverRemote remote) {
+	public void searchCompleted(RemoteLink remote) {
 		if(remote.getAvailableRovers().length>0) {
 			availabilityIndicator.setColor(Color.green);
 		}
@@ -156,7 +156,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 
 	@Override
-	public void searchFailed(RoverRemote roverRemote) {
+	public void searchFailed(RemoteLink roverRemote) {
 		availabilityIndicator.setColor(Color.red);			
 		roverCombo.setEnabled(false);
 		searchButton.setEnabled(true);
@@ -164,7 +164,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 
 	@Override
 	public void run() {
-		NXTInfo[] rovers=RoomRoverGui.getInstance().getRemote().getAvailableRovers();
+		NXTInfo[] rovers=RoomRoverGui.getInstance().getRemoteLink().getAvailableRovers();
 		roverCombo.removeAllItems();
 		if(rovers!=null) {
 			for(NXTInfo rover : rovers) {
@@ -179,7 +179,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 
 	@Override
-	public void roverConnectFailed(RoverRemote remote) {
+	public void connectFailed(RemoteLink remote) {
 		connectionIndicator.setColor(Color.red);
 		if(roverCombo.getSelectedItem()!=null) {
 			connectButton.setEnabled(true);
@@ -191,7 +191,7 @@ public class ConnectionPanel extends JPanel implements ActionListener, RemoteLis
 	}
 
 	@Override
-	public void roverConnectStarted(RoverRemote remote) {
+	public void connectStarted(RemoteLink remote) {
 		connectionIndicator.setColor(Color.yellow);
 		connectButton.setEnabled(false);
 		searchButton.setEnabled(false);

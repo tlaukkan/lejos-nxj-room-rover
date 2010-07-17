@@ -10,11 +10,11 @@ import lejos.pc.comm.NXTInfo;
 import org.lejos.rover.remote.message.KeepaliveMessage;
 import org.lejos.rover.remote.message.Message;
 
-public class RoverRemote implements Runnable {
+public class RemoteLink implements Runnable {
 	
 	private NXTComm communicator;
 
-	private List<RemoteListener> listeners=new ArrayList<RemoteListener>();
+	private List<LinkListener> listeners=new ArrayList<LinkListener>();
 	protected List<MessageListener> messageListeners=new ArrayList<MessageListener>();
 	private List<Message> messagesToSend=new ArrayList<Message>();
 
@@ -27,8 +27,8 @@ public class RoverRemote implements Runnable {
 	
 	private boolean stopRequest=false;
 	
-	public RoverRemote() {
-		thread=new Thread(this,"RoverRemote");
+	public RemoteLink() {
+		thread=new Thread(this,"RemoteLink");
 	}
 	
 	public void start() {		
@@ -59,13 +59,13 @@ public class RoverRemote implements Runnable {
 		}
 	}
 	
-	public void addRemoteListener(RemoteListener listener) {
+	public void addRemoteListener(LinkListener listener) {
 		synchronized(listeners) {
 			listeners.add(listener);
 		}
 	}
 	
-	public void removeRemoteListener(RemoteListener listener) {
+	public void removeRemoteListener(LinkListener listener) {
 		synchronized(listeners) {
 			listeners.remove(listener);
 		}
@@ -90,23 +90,23 @@ public class RoverRemote implements Runnable {
 		
 		Transmitter newTransmitter=new Transmitter(this,communicator,targetRover);
 		synchronized(listeners) {
-			for(RemoteListener listener : listeners) {
-				listener.roverConnectStarted(this);
+			for(LinkListener listener : listeners) {
+				listener.connectStarted(this);
 			}
 		}
 		if(newTransmitter.connect()) {
 			transmitter=newTransmitter;
 			synchronized(listeners) {
-				for(RemoteListener listener : listeners) {
-					listener.roverConnectCompleted(this);
+				for(LinkListener listener : listeners) {
+					listener.connectCompleted(this);
 				}
 			}
 			return true;
 		} 
 		else {
 			synchronized(listeners) {
-				for(RemoteListener listener : listeners) {
-					listener.roverConnectFailed(this);
+				for(LinkListener listener : listeners) {
+					listener.connectFailed(this);
 				}
 			}
 			return false;
@@ -114,7 +114,7 @@ public class RoverRemote implements Runnable {
 	}
 	
 	public void disconnect() {
-		if(transmitter!=null) {
+		if(transmitter!=null&&transmitter.isConnected()) {
 			transmitter.disconnect();
 		}
 	}
@@ -124,7 +124,7 @@ public class RoverRemote implements Runnable {
 		try {
 			communicator = NXTCommFactory.createNXTComm(NXTCommFactory.BLUETOOTH);
 			synchronized(listeners) {
-				for(RemoteListener listener : listeners) {
+				for(LinkListener listener : listeners) {
 					listener.bluetoothInitialized(this);
 				}
 			}		
@@ -132,7 +132,7 @@ public class RoverRemote implements Runnable {
 		catch(Throwable t) {
 			t.printStackTrace();
 			synchronized(listeners) {
-				for(RemoteListener listener : listeners) {
+				for(LinkListener listener : listeners) {
 					listener.bluetoothFailed(this);
 				}
 			}					
@@ -146,13 +146,13 @@ public class RoverRemote implements Runnable {
 			if(!isConnected()&&(availableRovers==null||(availableRovers.length==0&&currentTime-lastSearchTime>5000))) {
 				try {					
 					synchronized(listeners) {
-						for(RemoteListener listener : listeners) {
+						for(LinkListener listener : listeners) {
 							listener.searchStarted(this);
 						}
 					}
 					availableRovers=communicator.search(null,NXTCommFactory.BLUETOOTH);
 					synchronized(listeners) {
-						for(RemoteListener listener : listeners) {
+						for(LinkListener listener : listeners) {
 							listener.searchCompleted(this);
 						}
 					}
@@ -160,7 +160,7 @@ public class RoverRemote implements Runnable {
 				catch(Exception e) {
 					e.printStackTrace();
 					synchronized(listeners) {
-						for(RemoteListener listener : listeners) {
+						for(LinkListener listener : listeners) {
 							listener.searchFailed(this);
 						}
 					}
@@ -174,28 +174,36 @@ public class RoverRemote implements Runnable {
 					messagesToSend.clear();
 				}
 				synchronized(listeners) {
-					for(RemoteListener listener : listeners) {
-						listener.roverDisconnected(this);
+					for(LinkListener listener : listeners) {
+						listener.disconnected(this);
 					}
 				}				
 			}
 			
 			if(isConnected()) {
 				transmitter.encodeMessage(new KeepaliveMessage());
+				
+				while(messagesToSend.size()>0) {
+					Message message=null;
+					synchronized(messagesToSend) {
+						message=(Message)messagesToSend.remove(0);
+					}
+					transmitter.encodeMessage(message);
+				}
+								
+				// Check for connection timeout.
+				if(transmitter.getLastReceiveTime()!=0&&System.currentTimeMillis()-transmitter.getLastReceiveTime()>5000) {
+					transmitter.disconnect();
+				}
 			}
 									
 			try {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		if(transmitter!=null&&transmitter.isConnected()) {
-			transmitter.disconnect();
-			transmitter=null;
-		}
-		
+				
 	}
 
 	public NXTInfo getTargetRover() {
