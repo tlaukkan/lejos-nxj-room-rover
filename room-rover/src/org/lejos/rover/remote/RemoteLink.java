@@ -1,105 +1,104 @@
 package org.lejos.rover.remote;
 
+import java.util.ArrayList;
 
+import org.lejos.rover.remote.message.KeepaliveMessage;
+import org.lejos.rover.remote.message.Message;
 
+@SuppressWarnings("unchecked")
 public class RemoteLink implements Runnable {
 
 	private Thread thread;
 	private Transmitter transmitter;
-	private boolean stopRequest=false;
+	private boolean stopRequest = false;
 	
+	private ArrayList messagesToSend=new ArrayList();
+
 	public RemoteLink() {
-		thread=new Thread(this);
+		thread = new Thread(this);
+	}
+
+	public void sendMessage(Message message) {
+		synchronized(messagesToSend) {
+			if(isConnected()) {
+				messagesToSend.add(message);
+			}
+		}
 	}
 	
 	public void start() {
 		thread.start();
 	}
-	
+
 	@Override
 	public void run() {
-		
-		while(!stopRequest) {
-					
+
+		while (!stopRequest) {
+
 			try {
 				Thread.sleep(1000);
-			} catch (InterruptedException e) {}					
+			} catch (InterruptedException e) {
+			}
 			
+			transmitter = new Transmitter();
+
+			transmitter.listen();
+
 			try {
-				transmitter=new Transmitter();
-				
-				transmitter.listen();
-				
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+			}
+
+			while (transmitter.isListening()) {
 				try {
 					Thread.sleep(100);
-				} catch (InterruptedException e) {}					
+				} catch (InterruptedException e) {
+				}
+			}
 
-				while(transmitter.isListening()) {					
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) {}
+			while (transmitter.isConnected()) {
+
+				transmitter.encodeMessage(new KeepaliveMessage());
+
+				while(messagesToSend.size()>0) {
+					Message message=null;
+					synchronized(messagesToSend) {
+						message=(Message)messagesToSend.remove(0);
+					}
+					transmitter.encodeMessage(message);
 				}
 								
-				while(transmitter.isConnected()) {
-					
-					MessageCoder coder=transmitter.getMessageCoder();
-					coder.encodeKeepalive();					
-					if(coder.isException()) {
-						transmitter.disconnect();
-					}
-					
-					try {
-						Thread.sleep(100);
-					} catch (InterruptedException e) {}
-					
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
 				}
-				
-			}
-			catch(Throwable t) {
-				System.out.println(t.toString());
+
 			}
 
-			try {
-				while(transmitter!=null&&transmitter.isConnected()) {
-					transmitter.disconnect();
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {}					
-				}
-			}
-			catch(Throwable t) {
-				System.out.println(t.toString());
+			transmitter = null;
+			
+			synchronized(messagesToSend) {
+				messagesToSend.clear();
 			}
 
-			
-			transmitter=null;
-			
 		}
-		
+
 	}
-	
+
 	public boolean isConnected() {
-		return transmitter!=null&&transmitter.isConnected();
-	}
-	
-	public MessageCoder getMessageCoder() {
-		Transmitter tempTransmitter=transmitter;
-		if(tempTransmitter!=null) {
-			return tempTransmitter.getMessageCoder();
-		} else {
-			return null;
-		}
+		return transmitter != null && transmitter.isConnected();
 	}
 
 	public void stop() {
-		stopRequest=true;
+		stopRequest = true;
 		transmitter.disconnect();
-		
-		while(thread.isAlive()) {
-			thread.interrupt();			
+
+		while (thread.isAlive()) {
+			thread.interrupt();
 			try {
 				Thread.sleep(10);
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {
+			}
 		}
 	}
 
